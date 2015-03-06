@@ -43,6 +43,14 @@ func (q *CircularFifoQueue) Len() int {
 }
 
 /*
+Peek at the value at the head. It will return Nil
+if the queue is empty
+*/
+func (q *CircularFifoQueue) Peek(i interface{}) interface{} {
+	return q.buffer[q.head]
+}
+
+/*
 Enqueue a value into the queue. If the queue is full
 it will replace the oldest element.
 */
@@ -73,14 +81,28 @@ func (q *CircularFifoQueue) Dequeue() interface{} {
 }
 
 /*
-Rather than try and implement an iterator that might not suite
-every single need we make available the underlying buffer.
-Warning: Do not modify anything here and use it for read only purposes.
-The following link has a good rundown of different iterator patterns
-http://ewencp.org/blog/golang-iterators/
+Iterate through the queue in FIFO order via callback.
+The choice of callback was chosen based on the evaluation done
+in the following link http://ewencp.org/blog/golang-iterators/
+*/
+func (q *CircularFifoQueue) Do(f func(interface{})) {
+	isFirst := q.full
+	index := q.head
+	for isFirst || index != q.tail {
+		f(q.buffer[index])
+		index = (index + 1) % q.Capacity()
+		isFirst = false
+	}
+}
+
+/*
+Returns a copy of the underlying buffer.
+You are free to modify this as necessary
 */
 func (q *CircularFifoQueue) Values() []interface{} {
-	return q.buffer
+	b := make([]interface{}, q.Capacity())
+	copy(b, q.buffer)
+	return b
 }
 
 /*

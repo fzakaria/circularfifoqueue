@@ -1,6 +1,7 @@
 package circularfifoqueue
 
 import "testing"
+import "reflect"
 
 func TestBasicRemoveNoInsert(t *testing.T) {
 	q := NewCircularFifoQueue(10)
@@ -129,5 +130,51 @@ func TestBasicLenRollover(t *testing.T) {
 	}
 	if q.Len() != 7 {
 		t.Fatal("Unexpected response", q.Len(), "wanted", 7)
+	}
+}
+
+func TestBasicCallbackNoRollover(t *testing.T) {
+	q := NewCircularFifoQueue(20)
+	for i := 0; i < 10; i++ {
+		q.Enqueue(i)
+	}
+	start := 0
+	q.Do(func(val interface{}) {
+		if start != val {
+			t.Fatal("Unexpected response", val, "wanted", start)
+		}
+		start++
+	})
+}
+
+//[10 , 11,  12, 13, 14, nil, nil, nil, 8, 9 ]
+func TestBasicCallbackRollover(t *testing.T) {
+	q := NewCircularFifoQueue(10)
+	for i := 0; i < 15; i++ {
+		q.Enqueue(i)
+	}
+	for i := 0; i < 3; i++ {
+		q.Dequeue()
+	}
+	start := 8
+	q.Do(func(val interface{}) {
+		if start != val {
+			t.Fatal("Unexpected response", val, "wanted", start)
+		}
+		start++
+	})
+}
+
+func TestBasicValuesCopy(t *testing.T) {
+	q := NewCircularFifoQueue(10)
+	for i := 0; i < 15; i++ {
+		q.Enqueue(i)
+	}
+	for i := 0; i < 3; i++ {
+		q.Dequeue()
+	}
+	bufferCopy := q.Values()
+	if !reflect.DeepEqual(bufferCopy, q.buffer) {
+		t.Fatal("The copied buffer is not equal")
 	}
 }
