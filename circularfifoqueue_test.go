@@ -139,11 +139,12 @@ func TestBasicCallbackNoRollover(t *testing.T) {
 		q.Enqueue(i)
 	}
 	start := 0
-	q.Do(func(val interface{}) {
+	q.Do(0, func(val interface{}) bool {
 		if start != val {
 			t.Fatal("Unexpected response", val, "wanted", start)
 		}
 		start++
+		return true
 	})
 }
 
@@ -157,11 +158,12 @@ func TestBasicCallbackRollover(t *testing.T) {
 		q.Dequeue()
 	}
 	start := 8
-	q.Do(func(val interface{}) {
+	q.Do(0, func(val interface{}) bool {
 		if start != val {
 			t.Fatal("Unexpected response", val, "wanted", start)
 		}
 		start++
+		return true
 	})
 }
 
